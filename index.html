@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Futsal & Cricket, Club Fund</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%BD%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy-900: #0A1430;
+    --navy-800: #111E45;
+    --navy-700: #1A2B5E;
+    --teal: #17C3B2;
+    --teal-dark: #0E8F83;
+    --lime: #C6F432;
+    --orange: #FF8A3D;
+    --pink: #FF5D8F;
+    --ink: #121A33;
+    --muted: #5E6784;
+    --line: #DFE4F0;
+    --bg: #F2F5FB;
+    --card: #FFFFFF;
+    --paid-bg: #C6EFCE; --paid-fg: #1D5C2B;
+    --part-bg: #FFEB9C; --part-fg: #6B5200;
+    --pend-bg: #FFC7CE; --pend-fg: #8A1C1C;
+    --cred-bg: #D7ECFF; --cred-fg: #134A7A;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  *, *::before, *::after { box-sizing: inherit; margin: 0; }
+  body { font-family: "Inter", "Segoe UI", Arial, sans-serif; background: var(--bg); color: var(--ink); font-size: 15px; line-height: 1.45; }
+  .disp { font-family: "Rajdhani", "Arial Narrow", Arial, sans-serif; font-weight: 700; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ---------- Header, scoreboard and footer share a "futsal court" texture ---------- */
+  .court {
+    color: #fff;
+    background-color: var(--navy-900);
+    background-image:
+      radial-gradient(ellipse at 90% -10%, rgba(23,195,178,.35), transparent 55%),
+      radial-gradient(ellipse at 0% 110%, rgba(198,244,50,.16), transparent 55%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='80'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.06' stroke-width='1.5'%3E%3Crect x='1' y='1' width='118' height='78'/%3E%3Cline x1='60' y1='0' x2='60' y2='80'/%3E%3Ccircle cx='60' cy='40' r='14'/%3E%3Cpath d='M0 22 a18 18 0 0 1 0 36 M120 22 a18 18 0 0 0 0 36'/%3E%3C/g%3E%3C/svg%3E");
+  }
+  header.court { position: relative; overflow: hidden; }
+  header.court::after { content: ""; position: absolute; right: -40px; top: -40px; width: 180px; height: 180px; border-radius: 50%; border: 18px solid rgba(198,244,50,.12); pointer-events: none; }
+  .head-inner { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 20px 16px 10px; display: flex; align-items: center; gap: 14px; }
+  .badge-logo { width: 62px; height: 62px; border-radius: 16px; flex: none; display: grid; place-items: center; font-size: 34px;
+                background: linear-gradient(135deg, var(--teal), var(--lime)); box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+  header h1 { font-family: "Rajdhani", Arial, sans-serif; font-weight: 700; font-size: clamp(28px, 7.5vw, 42px); line-height: 1; letter-spacing: .5px; text-transform: uppercase; }
+  header h1 .amp { color: var(--lime); }
+  header .tag { margin-top: 4px; color: #B9C4E4; font-size: 14px; }
+  header .tag b { color: var(--teal); font-weight: 600; }
+
+  .scoreboard { padding: 8px 16px 20px; border-top: 1px solid rgba(255,255,255,.07); }
+  .score-inner { max-width: 1040px; margin: 0 auto; }
+  .cash { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 4px 16px; margin-bottom: 14px; }
+  .cash .lbl { font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--lime); font-weight: 700; }
+  .cash .val { font-family: "Rajdhani", Arial, sans-serif; font-weight: 700; font-size: clamp(46px, 12vw, 74px); line-height: .95; }
+  .cash .val small { font-size: .36em; color: #B9C4E4; margin-right: 6px; }
+  .cash .val.neg { color: #FF9AA8; }
+  .cash .note { color: #B9C4E4; font-size: 14px; padding-bottom: 8px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .kpi { border-radius: 14px; padding: 12px 14px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); position: relative; overflow: hidden; }
+  .kpi::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c); }
+  .kpi .k { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #B9C4E4; }
+  .kpi .v { font-family: "Rajdhani", Arial, sans-serif; font-weight: 700; font-size: 30px; line-height: 1.1; }
+
+  /* ---------- Tabs ---------- */
+  .tabs-wrap { position: sticky; top: 0; z-index: 20; background: var(--navy-800); border-top: 3px solid var(--teal); box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+  .tabs { max-width: 1040px; margin: 0 auto; display: flex; gap: 2px; padding: 0 8px; overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex: none; background: transparent; border: 0; color: #B9C4E4; font: 700 13px "Inter", Arial, sans-serif; text-transform: uppercase; letter-spacing: 1px; padding: 15px 13px 12px; cursor: pointer; border-bottom: 3px solid transparent; }
+  .tab[aria-selected="true"] { color: var(--lime); border-bottom-color: var(--lime); }
+  .tab:focus-visible, .btn:focus-visible, .chip:focus-visible { outline: 3px solid var(--lime); outline-offset: 2px; }
+
+  main { max-width: 1040px; margin: 0 auto; padding: 20px 14px 40px; }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 16px; margin-bottom: 18px; overflow: hidden; }
+  .phead { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; padding: 16px 16px 10px; }
+  .phead h2 { font-family: "Rajdhani", Arial, sans-serif; font-weight: 700; font-size: 24px; letter-spacing: .4px; color: var(--navy-700); text-transform: uppercase; line-height: 1.1; }
+  .phead .aside { font-size: 13px; color: var(--muted); }
+  .empty { padding: 16px; color: var(--muted); }
+  .notice { border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; font-size: 14px; background: #FDE8E8; border: 1px solid #EBA3A3; color: #7A1A1A; }
+  [hidden] { display: none !important; }
+
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 16px 12px; }
+  .chips.row { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .chips.row::-webkit-scrollbar { display: none; }
+  .chips.row .chip { flex: none; }
+  .chip { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 5px 12px; font: 600 13px "Inter", Arial, sans-serif; cursor: pointer; color: var(--ink); }
+  .chip[aria-pressed="true"] { background: var(--navy-700); color: var(--lime); border-color: var(--navy-700); }
+
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .s-Paid { background: var(--paid-bg); color: var(--paid-fg); }
+  .s-Partial { background: var(--part-bg); color: var(--part-fg); }
+  .s-Pending { background: var(--pend-bg); color: var(--pend-fg); }
+  .s-Credit { background: var(--cred-bg); color: var(--cred-fg); }
+
+  /* Month-by-month bars */
+  .bars { display: flex; gap: 14px; overflow-x: auto; padding: 8px 16px 14px; align-items: flex-end; }
+  .mcol { flex: 0 0 64px; text-align: center; }
+  .mcol .pair { height: 150px; display: flex; align-items: flex-end; justify-content: center; gap: 5px; }
+  .mcol .b { width: 22px; border-radius: 6px 6px 2px 2px; transition: height .6s ease; min-height: 2px; }
+  .mcol .b.in { background: linear-gradient(180deg, var(--lime), var(--teal)); }
+  .mcol .b.out { background: linear-gradient(180deg, #FFB37A, var(--orange)); }
+  .mcol .m { font-weight: 700; font-size: 13px; margin-top: 6px; }
+  .mcol .y { font-size: 11px; color: var(--muted); }
+  .mcol .net { font-size: 12px; font-weight: 700; margin-top: 3px; }
+  .net.up { color: var(--teal-dark); } .net.down { color: #D23C3C; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 0 16px; font-size: 13px; color: var(--muted); }
+  .legend i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+  /* Progress */
+  .meters { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; padding: 0 16px 16px; }
+  .meter { border-radius: 14px; padding: 14px; background: #EEF9F7; }
+  .meter.o { background: #FFF3EA; }
+  .meter .top { display: flex; justify-content: space-between; align-items: baseline; font-weight: 600; font-size: 14px; }
+  .meter .big { font-family: "Rajdhani", Arial, sans-serif; font-weight: 700; font-size: 28px; }
+  .meter .sub { font-size: 13px; color: var(--muted); }
+  .track { height: 11px; background: rgba(0,0,0,.08); border-radius: 6px; overflow: hidden; margin-top: 9px; }
+  .fill { height: 100%; width: 0; border-radius: 6px; background: linear-gradient(90deg, var(--teal), var(--lime)); transition: width .7s ease; }
+  .fill.o { background: linear-gradient(90deg, var(--orange), #FFC15E); }
+
+  /* Monthly members list */
+  .mlist { padding: 0 16px 14px; display: grid; gap: 8px; }
+  .mrow { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: #FBFCFF; }
+  .mrow .n { font-weight: 600; }
+  .mrow .amt { font-size: 13px; color: var(--muted); }
+  .mrow .amt b { color: var(--ink); }
+  .mrow .track { grid-column: 1 / -1; height: 6px; margin-top: 2px; }
+
+  /* Member cards */
+  .mgrid { padding: 0 16px 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .mcard { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: #FBFCFF; }
+  .mcard .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .mcard .n { font-weight: 700; font-size: 16px; }
+  .mcard .stats { display: flex; gap: 14px; margin-top: 6px; font-size: 13px; color: var(--muted); }
+  .mcard .stats b { color: var(--ink); }
+  .dots { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
+  .dot { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-size: 10px; font-weight: 700; color: #fff; }
+  .dot.Paid { background: var(--teal); } .dot.Credit { background: #3A8BD6; } .dot.Partial { background: #E5B100; } .dot.Pending { background: #E05555; } .dot.none { background: #E4E8F2; color: #9AA3BD; }
+
+  /* Tables */
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 10px 16px; text-align: left; border-top: 1px solid var(--line); white-space: nowrap; }
+  th { font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); background: #F6F8FD; }
+  td.r, th.r { text-align: right; }
+  tfoot td { font-weight: 700; background: #F6F8FD; }
+  .cat { display: inline-block; padding: 2px 9px; border-radius: 6px; font-size: 12px; font-weight: 700; background: #E6F7F5; color: var(--teal-dark); }
+  .cat.Equipment { background: #FFF0E5; color: #B4541A; }
+
+  /* Admin */
+  form.admin { padding: 0 16px 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  form.admin label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  form.admin input, form.admin select { font: 16px "Inter", Arial, sans-serif; color: var(--ink); padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  form.admin input:focus, form.admin select:focus { outline: 2px solid var(--teal); border-color: var(--teal); }
+  form.admin .actions { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .btn { background: var(--navy-700); color: var(--lime); border: 0; border-radius: 999px; padding: 10px 20px; font: 700 14px "Inter", Arial, sans-serif; cursor: pointer; }
+  .msg { font-size: 14px; } .msg.ok { color: var(--teal-dark); } .msg.bad { color: #C62828; }
+  .save-status { position: sticky; top: 56px; z-index: 5; margin-bottom: 16px; padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; border: 1px solid var(--line); background: #fff; box-shadow: 0 4px 14px rgba(0,0,0,.08); }
+  .save-status.busy { border-color: #EBCB72; background: #FFF6DA; color: #5A4300; }
+  .save-status.ok { border-color: #9FD3AC; background: #E6F5E9; color: #1D5C2B; }
+  .save-status.bad { border-color: #EBA3A3; background: #FDE8E8; color: #7A1A1A; }
+
+  footer.court { text-align: center; padding: 28px 20px 32px; border-top: 4px solid var(--teal); }
+  footer .badge-logo { margin: 0 auto 10px; width: 52px; height: 52px; font-size: 28px; }
+  footer .l1 { font-family: "Rajdhani", Arial, sans-serif; font-weight: 700; font-size: 22px; letter-spacing: 1px; text-transform: uppercase; }
+  footer .l1 .amp { color: var(--lime); }
+  footer .l2 { color: #B9C4E4; font-size: 14px; margin-top: 2px; }
+  footer .l3 { color: #7D88AA; font-size: 12px; margin-top: 12px; }
+
+  @media (prefers-reduced-motion: reduce) { .fill, .mcol .b { transition: none; } }
+</style>
+</head>
+<body>
+
+<header class="court">
+  <div class="head-inner">
+    <div class="badge-logo" aria-hidden="true">⚽</div>
+    <div>
+      <h1>Futsal <span class="amp">&amp;</span> Cricket</h1>
+      <div class="tag" id="tagline">Club fund, <b>monthly contributions and bookings</b></div>
+    </div>
+  </div>
+</header>
+
+<section class="scoreboard court" aria-label="Club totals">
+  <div class="score-inner">
+    <div class="cash">
+      <div>
+        <div class="lbl">Cash in hand</div>
+        <div class="val num" id="hCash"><small>LKR</small>–</div>
+      </div>
+      <div class="note" id="hCashNote">Collected minus spent</div>
+    </div>
+    <div class="kpis">
+      <div class="kpi" style="--c:var(--lime)"><div class="k">Collected</div><div class="v num" id="kIn">–</div></div>
+      <div class="kpi" style="--c:var(--orange)"><div class="k">Spent</div><div class="v num" id="kOut">–</div></div>
+      <div class="kpi" style="--c:var(--pink)"><div class="k">Still to collect</div><div class="v num" id="kDue">–</div></div>
+      <div class="kpi" style="--c:var(--teal)"><div class="k">Sessions booked</div><div class="v num" id="kSessions">–</div></div>
+    </div>
+  </div>
+</section>
+
+<nav class="tabs-wrap">
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="overview">Overview</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="monthly">Monthly</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="members">Members</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="payments">Payments</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="expenses">Expenses</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="admin" id="adminTabBtn" hidden>Admin</button>
+  </div>
+</nav>
+
+<main>
+  <div class="notice" id="error" hidden></div>
+
+  <!-- OVERVIEW -->
+  <div id="tab-overview">
+    <section class="panel">
+      <div class="phead"><h2 id="curTitle">This month</h2><span class="aside" id="curAside"></span></div>
+      <div class="meters">
+        <div class="meter">
+          <div class="top"><span>Members paid</span><span class="big num" id="curPaid">–</span></div>
+          <div class="sub" id="curPaidSub">–</div>
+          <div class="track"><div class="fill" id="curFill"></div></div>
+        </div>
+        <div class="meter o">
+          <div class="top"><span>Spent this month</span><span class="big num" id="curSpent">–</span></div>
+          <div class="sub" id="curSpentSub">–</div>
+          <div class="track"><div class="fill o" id="curSpentFill"></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="phead"><h2>Month by month</h2><span class="aside">Net = collected minus spent</span></div>
+      <div class="legend"><span><i style="background:linear-gradient(180deg,#C6F432,#17C3B2)"></i>Collected</span><span><i style="background:#FF8A3D"></i>Spent</span></div>
+      <div class="bars" id="bars"></div>
+    </section>
+  </div>
+
+  <!-- MONTHLY -->
+  <div id="tab-monthly" hidden>
+    <section class="panel">
+      <div class="phead"><h2 id="monTitle">Month</h2><span class="aside" id="monAside"></span></div>
+      <div class="chips row" id="monChips"></div>
+      <div class="meters">
+        <div class="meter">
+          <div class="top"><span>Collected</span><span class="big num" id="monIn">–</span></div>
+          <div class="sub" id="monInSub">–</div>
+          <div class="track"><div class="fill" id="monFill"></div></div>
+        </div>
+        <div class="meter o">
+          <div class="top"><span>Spent</span><span class="big num" id="monOut">–</span></div>
+          <div class="sub" id="monOutSub">–</div>
+        </div>
+      </div>
+      <div class="mlist" id="monList"></div>
+    </section>
+  </div>
+
+  <!-- MEMBERS -->
+  <div id="tab-members" hidden>
+    <section class="panel">
+      <div class="phead"><h2>Members</h2><span class="aside">Each square is a month: <b style="color:#17C3B2">paid</b>, <b style="color:#E5B100">part</b>, <b style="color:#E05555">unpaid</b>, <b style="color:#3A8BD6">extra</b></span></div>
+      <div class="mgrid" id="memberGrid"></div>
+    </section>
+  </div>
+
+  <!-- PAYMENTS -->
+  <div id="tab-payments" hidden>
+    <section class="panel">
+      <div class="phead"><h2>Payments</h2><span class="aside" id="payAside"></span></div>
+      <div class="chips row" id="payChips"></div>
+      <div class="scroll"><table>
+        <thead><tr><th>Paid on</th><th>Member</th><th>For</th><th class="r">Amount</th><th>Notes</th></tr></thead>
+        <tbody id="payBody"></tbody>
+        <tfoot><tr><td colspan="3">Total</td><td class="r num" id="payTotal">–</td><td></td></tr></tfoot>
+      </table></div>
+    </section>
+  </div>
+
+  <!-- EXPENSES -->
+  <div id="tab-expenses" hidden>
+    <section class="panel">
+      <div class="phead"><h2>Expenses</h2><span class="aside" id="expAside"></span></div>
+      <div class="meters" id="expCats"></div>
+      <div class="chips" id="expChips"></div>
+      <div class="scroll"><table>
+        <thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="r">Amount</th></tr></thead>
+        <tbody id="expBody"></tbody>
+        <tfoot><tr><td colspan="3">Total</td><td class="r num" id="expTotal">–</td></tr></tfoot>
+      </table></div>
+    </section>
+  </div>
+
+  <!-- ADMIN (only shown when the page is opened with ?admin) -->
+  <div id="tab-admin" hidden>
+    <div class="save-status" id="saveStatus" role="status" aria-live="polite" hidden></div>
+    <section class="panel">
+      <div class="phead"><h2>Admin PIN</h2></div>
+      <form class="admin" id="pinForm">
+        <label>PIN<input type="password" id="pin" autocomplete="new-password" inputmode="numeric" required></label>
+        <div class="actions"><button class="btn" type="submit">Check PIN</button><span class="msg" id="pinMsg"></span></div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="phead"><h2>Add payment</h2></div>
+      <form class="admin" id="payForm">
+        <label>Member<select name="memberSelect" id="memberSelect" required></select></label>
+        <label id="newMemberWrap" hidden>New member's name<input name="newMember" id="newMember"></label>
+        <label>For month<input type="month" name="month" required></label>
+        <label>Amount (LKR)<input type="number" name="amount" min="1" step="any" inputmode="decimal" required></label>
+        <label>Paid on<input type="date" name="date" required></label>
+        <label>Monthly amount agreed (LKR)<input type="number" name="agreed" min="0" step="any" inputmode="decimal" placeholder="Only if not set for this month"></label>
+        <label>Notes<input name="notes" placeholder="Left blank: Full or Partial Payment"></label>
+        <div class="actions"><button class="btn" type="submit">Add payment</button></div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="phead"><h2>Add expense</h2></div>
+      <form class="admin" id="expForm">
+        <label>Date<input type="date" name="date" required></label>
+        <label>Description<input name="description" value="Futsal Booking" required></label>
+        <label>Category<select name="category" id="catSelect"></select></label>
+        <label id="catNewWrap" hidden>New category<input name="catNew" id="catNew"></label>
+        <label>Amount (LKR)<input type="number" name="amount" min="1" step="any" inputmode="decimal" required></label>
+        <div class="actions"><button class="btn" type="submit">Add expense</button></div>
+      </form>
+    </section>
+
+    <section class="panel">
+      <div class="phead"><h2>Start a new month</h2></div>
+      <form class="admin" id="monthForm">
+        <label>Month<input type="month" name="month" required></label>
+        <label>Copy members and amounts from<select name="from" id="fromMonthSelect"></select></label>
+        <div class="actions"><button class="btn" type="submit">Create month</button></div>
+      </form>
+    </section>
+  </div>
+</main>
+
+<footer class="court">
+  <div class="badge-logo" aria-hidden="true">⚽</div>
+  <div class="l1">Futsal <span class="amp">&amp;</span> Cricket</div>
+  <div class="l2">See you on the court.</div>
+  <div class="l3">© <span id="year">2026</span> Futsal &amp; Cricket club</div>
+</footer>
+
+<script>
+/* ===== Settings you may edit ===== */
+// The ID of the Google Sheet: the long code between /d/ and /edit in its URL.
+const SHEET_ID = "1zamuaiHpRq2tFrkTdsebpj65v1M6brIVo1o4XIhMZbw";
+// Web app URL from Apps Script (Deploy → Manage deployments). Used only by the Admin tab.
+const ADMIN_URL = "https://script.google.com/macros/s/AKfycbwm1bLWE8nxTk3FM328MfRcs6nseIqH2phUZtcCFW78UHB-ZT4IvOWCJcyTxTQOytgj/exec";
+// Tab names exactly as they appear at the bottom of the Google Sheet.
+const SOURCES = {
+  members:  { tab: "Members" },
+  payments: { tab: "Payments" },
+  expenses: { tab: "Expenses" }
+};
+const AUTO_REFRESH_SECONDS = 60;
+/* ================================= */
+
+const CACHE_KEY = "futsal-cricket-cache-v1";
+const $ = id => document.getElementById(id);
+const norm = s => String(s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const titleCase = v => String(v ?? "").trim().replace(/\s+/g, " ").replace(/(^|[\s.(\-'/])([a-z])/g, (m, a, b) => a + b.toUpperCase());
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const FULL_MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const mLabel = k => { const [y, m] = k.split("-"); return `${MONTHS[+m - 1]} ${y}`; };
+const mLong = k => { const [y, m] = k.split("-"); return `${FULL_MONTHS[+m - 1]} ${y}`; };
+const dLabel = iso => { if (!iso) return ""; const [y, m, d] = iso.split("-"); return `${+d} ${MONTHS[+m - 1]} ${y}`; };
+
+function pick(row, ...prefixes) {
+  for (const p of prefixes) for (const k of Object.keys(row)) if (norm(k).startsWith(p)) return row[k];
+  return "";
+}
+function num(v) {
+  if (typeof v === "number") return v;
+  const n = parseFloat(String(v ?? "").replace(/[^0-9.\-]/g, ""));
+  return isNaN(n) ? 0 : n;
+}
+
+// Reads one tab straight from Google Sheets (no API key, no request quota).
+// Dates come back as ISO text (2026-10-01), whatever date format the sheet uses.
+async function fetchTab({ tab }) {
+  if (!SHEET_ID || SHEET_ID.startsWith("PASTE_")) throw new Error("The Google Sheet ID hasn't been added to index.html yet.");
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=${encodeURIComponent(tab)}&_=${Date.now()}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`Couldn't read the "${tab}" tab (${r.status}).`);
+  const text = await r.text();
+  const json = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+  if (json.status === "error") throw new Error(`Couldn't read the "${tab}" tab. Check the tab name and that the sheet is shared as "Anyone with the link".`);
+  const labels = json.table.cols.map((c, i) => c.label || c.id || "col" + i);
+  const val = cell => {
+    if (!cell || cell.v == null) return "";
+    if (typeof cell.v === "number") return cell.v;
+    const d = /^Date\((\d+),(\d+),(\d+)/.exec(cell.v);
+    if (d) return `${d[1]}-${String(+d[2] + 1).padStart(2, "0")}-${String(d[3]).padStart(2, "0")}`;
+    return cell.f ?? cell.v;
+  };
+  return json.table.rows.map(row => {
+    const o = {};
+    (row.c || []).forEach((cell, i) => { o[labels[i]] = val(cell); });
+    return o;
+  });
+}
+async function fetchAll() {
+  const keys = Object.keys(SOURCES);
+  const res = await Promise.all(keys.map(k => fetchTab(SOURCES[k])));
+  return Object.fromEntries(keys.map((k, i) => [k, res[i]]));
+}
+
+// Month key "2026-10" from an ISO date or a "Oct 2026" style text.
+function monthKey(v) {
+  const s = String(v || "");
+  let m = /^(\d{4})-(\d{2})/.exec(s);
+  if (m) return `${m[1]}-${m[2]}`;
+  m = /^([A-Za-z]{3})[a-z]*\s+(\d{4})$/.exec(s.trim());
+  if (m) { const i = MONTHS.findIndex(x => x.toLowerCase() === m[1].toLowerCase()); if (i >= 0) return `${m[2]}-${String(i + 1).padStart(2, "0")}`; }
+  return "";
+}
+const isoOf = v => /^\d{4}-\d{2}-\d{2}$/.test(String(v)) ? String(v) : "";
+
+/* ===== Shape the sheet rows ===== */
+function shape(data) {
+  const members = data.members.map(r => ({
+    name: String(pick(r, "membername", "name")).trim(), mkey: monthKey(pick(r, "month")), agreed: num(pick(r, "agreed"))
+  })).filter(r => r.name && r.mkey);
+  const payments = data.payments.map(r => {
+    const date = isoOf(pick(r, "date"));
+    return { name: String(pick(r, "membername", "name")).trim(), date, mkey: monthKey(date) || monthKey(pick(r, "month")),
+             amount: num(pick(r, "amountpaid", "amount")), notes: String(pick(r, "notes")).trim(), actual: isoOf(pick(r, "actualdate")) || date };
+  }).filter(r => r.name && r.amount > 0);
+  const expenses = data.expenses.map(r => {
+    const date = isoOf(pick(r, "date"));
+    return { date, mkey: monthKey(date), desc: String(pick(r, "description")).trim(), cat: String(pick(r, "category")).trim() || "Other", amount: num(pick(r, "amount")) };
+  }).filter(r => r.amount > 0);
+  return { members, payments, expenses };
+}
+
+function statusOf(paid, agreed) {
+  if (agreed <= 0) return paid > 0 ? "Credit" : "Pending";
+  if (paid > agreed) return "Credit";
+  if (paid >= agreed) return "Paid";
+  return paid > 0 ? "Partial" : "Pending";
+}
+const LABEL = { Paid: "Paid", Partial: "Partial", Pending: "Unpaid", Credit: "Paid extra" };
+const badge = s => `<span class="badge s-${s}">${LABEL[s]}</span>`;
+
+/* ===== Render ===== */
+let state = null, selMonth = "", payMonth = "", expCat = "";
+function render(data) {
+  $("error").hidden = true;
+  const { members, payments, expenses } = shape(data);
+  if (data.members.length && !members.length) {
+    $("error").textContent = "The Members tab's headers weren't found. Row 1 must hold Member Name, Month and Agreed Amount.";
+    $("error").hidden = false;
+  }
+
+  // Paid per member per month
+  const paidMM = {};
+  payments.forEach(p => { const k = norm(p.name) + "|" + p.mkey; paidMM[k] = (paidMM[k] || 0) + p.amount; });
+  const memberMonths = members.map(m => {
+    const paid = paidMM[norm(m.name) + "|" + m.mkey] || 0;
+    return { ...m, paid, status: statusOf(paid, m.agreed), due: Math.max(m.agreed - paid, 0) };
+  });
+
+  const months = [...new Set([...members.map(m => m.mkey), ...payments.map(p => p.mkey), ...expenses.map(e => e.mkey)].filter(Boolean))].sort();
+  const totIn = payments.reduce((a, p) => a + p.amount, 0);
+  const totOut = expenses.reduce((a, e) => a + e.amount, 0);
+  // Still to collect: each member's agreed total minus paid total, so extra paid in one month offsets another.
+  const net = {};
+  memberMonths.forEach(m => { net[norm(m.name)] = (net[norm(m.name)] || 0) + m.agreed - m.paid; });
+  const totDue = Object.values(net).reduce((a, v) => a + Math.max(v, 0), 0);
+  const sessions = expenses.filter(e => /book/i.test(e.cat)).length;
+  state = { members, payments, expenses, memberMonths, months };
+
+  const cash = totIn - totOut;
+  $("hCash").innerHTML = `<small>LKR</small>${cash < 0 ? "−" : ""}${fmt(Math.abs(cash))}`;
+  $("hCash").classList.toggle("neg", cash < 0);
+  $("hCashNote").textContent = cash < 0 ? "More spent than collected so far" : "Collected minus spent";
+  $("kIn").textContent = fmt(totIn);
+  $("kOut").textContent = fmt(totOut);
+  $("kDue").textContent = fmt(totDue);
+  $("kSessions").textContent = fmt(sessions);
+
+  // Current month = this calendar month if it has data, else the latest month with members
+  const nowKey = new Date().toISOString().slice(0, 7);
+  const memberMonthKeys = [...new Set(members.map(m => m.mkey))].sort();
+  const cur = memberMonthKeys.includes(nowKey) ? nowKey : memberMonthKeys[memberMonthKeys.length - 1] || nowKey;
+  if (!selMonth || !months.includes(selMonth)) selMonth = cur;
+
+  renderCurrent(cur);
+  renderBars();
+  renderMonthly();
+  renderMembers();
+  renderPayments();
+  renderExpenses();
+  fillAdmin();
+}
+
+function monthStats(k) {
+  const mm = state.memberMonths.filter(m => m.mkey === k);
+  const expected = mm.reduce((a, m) => a + m.agreed, 0);
+  const collected = state.payments.filter(p => p.mkey === k).reduce((a, p) => a + p.amount, 0);
+  const ex = state.expenses.filter(e => e.mkey === k);
+  const spent = ex.reduce((a, e) => a + e.amount, 0);
+  const sessions = ex.filter(e => /book/i.test(e.cat)).length;
+  const paidCount = mm.filter(m => m.status === "Paid" || m.status === "Credit").length;
+  return { mm, expected, collected, spent, sessions, paidCount };
+}
+
+function renderCurrent(k) {
+  const s = monthStats(k);
+  $("curTitle").textContent = mLong(k);
+  $("curAside").textContent = `${s.sessions} session${s.sessions === 1 ? "" : "s"} booked`;
+  $("curPaid").textContent = `${s.paidCount} / ${s.mm.length}`;
+  $("curPaidSub").textContent = `LKR ${fmt(s.collected)} of ${fmt(s.expected)} expected`;
+  $("curFill").style.width = (s.expected ? Math.min(s.collected / s.expected * 100, 100) : 0) + "%";
+  $("curSpent").textContent = fmt(s.spent);
+  $("curSpentSub").textContent = s.collected ? `${Math.round(s.spent / s.collected * 100)}% of this month's collections` : "Nothing collected yet this month";
+  $("curSpentFill").style.width = (s.collected ? Math.min(s.spent / s.collected * 100, 100) : (s.spent ? 100 : 0)) + "%";
+}
+
+function renderBars() {
+  const rows = state.months.map(k => ({ k, ...monthStats(k) }));
+  const max = Math.max(1, ...rows.map(r => Math.max(r.collected, r.spent)));
+  $("bars").innerHTML = rows.length ? rows.map(r => {
+    const net = r.collected - r.spent;
+    const [y] = r.k.split("-");
+    return `<div class="mcol" title="${mLong(r.k)}: collected LKR ${fmt(r.collected)}, spent LKR ${fmt(r.spent)}">
+      <div class="pair"><div class="b in" style="height:${r.collected / max * 100}%"></div><div class="b out" style="height:${r.spent / max * 100}%"></div></div>
+      <div class="m">${mLabel(r.k).split(" ")[0]}</div><div class="y">${y}</div>
+      <div class="net num ${net >= 0 ? "up" : "down"}">${net >= 0 ? "+" : "−"}${fmt(Math.abs(net))}</div>
+    </div>`;
+  }).join("") : `<div class="empty">No months yet.</div>`;
+  const el = $("bars"); el.scrollLeft = el.scrollWidth; // show the latest months first
+}
+
+function renderMonthly() {
+  const keys = [...state.months].reverse();
+  $("monChips").innerHTML = keys.map(k => `<button class="chip" data-m="${k}" aria-pressed="${k === selMonth}">${mLabel(k)}</button>`).join("");
+  const s = monthStats(selMonth);
+  $("monTitle").textContent = mLong(selMonth);
+  $("monAside").textContent = `${s.paidCount} of ${s.mm.length} paid · ${s.sessions} session${s.sessions === 1 ? "" : "s"}`;
+  $("monIn").textContent = fmt(s.collected);
+  $("monInSub").textContent = `of LKR ${fmt(s.expected)} expected`;
+  $("monFill").style.width = (s.expected ? Math.min(s.collected / s.expected * 100, 100) : 0) + "%";
+  $("monOut").textContent = fmt(s.spent);
+  const net = s.collected - s.spent;
+  $("monOutSub").textContent = `Net for the month: ${net >= 0 ? "+" : "−"}LKR ${fmt(Math.abs(net))}`;
+  const order = { Pending: 0, Partial: 1, Paid: 2, Credit: 3 };
+  $("monList").innerHTML = s.mm.length ? [...s.mm].sort((a, b) => order[a.status] - order[b.status] || a.name.localeCompare(b.name)).map(m => `
+    <div class="mrow">
+      <div><div class="n">${esc(titleCase(m.name))}</div><div class="amt">Paid <b class="num">${fmt(m.paid)}</b> of ${fmt(m.agreed)}${m.due ? ` · due <b class="num">${fmt(m.due)}</b>` : ""}</div></div>
+      ${badge(m.status)}
+      <div class="track"><div class="fill" style="width:${m.agreed ? Math.min(m.paid / m.agreed * 100, 100) : (m.paid ? 100 : 0)}%"></div></div>
+    </div>`).join("") : `<div class="empty">No members set up for this month.</div>`;
+}
+$("monChips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; selMonth = b.dataset.m; renderMonthly(); });
+
+function renderMembers() {
+  const by = {};
+  state.memberMonths.forEach(m => { (by[norm(m.name)] ||= { name: m.name.trim(), rows: [] }).rows.push(m); });
+  const list = Object.values(by).map(x => {
+    const agreed = x.rows.reduce((a, r) => a + r.agreed, 0), paid = x.rows.reduce((a, r) => a + r.paid, 0);
+    return { ...x, agreed, paid, due: Math.max(agreed - paid, 0), credit: Math.max(paid - agreed, 0) };
+  }).sort((a, b) => b.due - a.due || b.paid - a.paid);
+  const last6 = state.months.slice(-12);
+  $("memberGrid").innerHTML = list.length ? list.map(x => {
+    const st = x.due ? `<span class="badge s-Pending">Owes ${fmt(x.due)}</span>` : (x.credit ? `<span class="badge s-Credit">Ahead ${fmt(x.credit)}</span>` : `<span class="badge s-Paid">Up to date</span>`);
+    const dots = last6.map(k => {
+      const r = x.rows.find(r => r.mkey === k);
+      return `<span class="dot ${r ? r.status : "none"}" title="${mLong(k)}: ${r ? `${LABEL[r.status]}, LKR ${fmt(r.paid)} of ${fmt(r.agreed)}` : "not a member this month"}">${MONTHS[+k.split("-")[1] - 1][0]}</span>`;
+    }).join("");
+    return `<div class="mcard">
+      <div class="top"><span class="n">${esc(titleCase(x.name))}</span>${st}</div>
+      <div class="stats"><span>Paid <b class="num">${fmt(x.paid)}</b></span><span>${x.rows.length} month${x.rows.length === 1 ? "" : "s"}</span></div>
+      <div class="dots">${dots}</div>
+    </div>`;
+  }).join("") : `<div class="empty">No members yet.</div>`;
+}
+
+function renderPayments() {
+  const keys = [...state.months].reverse().slice(0, 8);
+  if (payMonth && !state.months.includes(payMonth)) payMonth = "";
+  $("payChips").innerHTML = [`<button class="chip" data-m="" aria-pressed="${!payMonth}">All</button>`, ...keys.map(k => `<button class="chip" data-m="${k}" aria-pressed="${k === payMonth}">${mLabel(k)}</button>`)].join("");
+  const list = state.payments.filter(p => !payMonth || p.mkey === payMonth).sort((a, b) => (b.actual || "").localeCompare(a.actual || ""));
+  $("payBody").innerHTML = list.length ? list.map(p => `<tr><td>${dLabel(p.actual)}</td><td>${esc(titleCase(p.name))}</td><td>${p.mkey ? mLabel(p.mkey) : ""}</td><td class="r num">${fmt(p.amount)}</td><td>${esc(p.notes)}</td></tr>`).join("")
+    : `<tr><td colspan="5" class="empty">No payments for this month.</td></tr>`;
+  $("payTotal").textContent = fmt(list.reduce((a, p) => a + p.amount, 0));
+  $("payAside").textContent = `${list.length} payment${list.length === 1 ? "" : "s"}`;
+}
+$("payChips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; payMonth = b.dataset.m; renderPayments(); });
+
+function renderExpenses() {
+  const all = state.expenses, total = all.reduce((a, e) => a + e.amount, 0);
+  const cats = {};
+  all.forEach(e => { (cats[e.cat] ||= { amt: 0, n: 0 }); cats[e.cat].amt += e.amount; cats[e.cat].n++; });
+  $("expCats").innerHTML = Object.entries(cats).sort((a, b) => b[1].amt - a[1].amt).map(([c, v], i) => `
+    <div class="meter ${i % 2 ? "o" : ""}">
+      <div class="top"><span>${esc(c)}</span><span class="big num">${fmt(v.amt)}</span></div>
+      <div class="sub">${v.n} ${/book/i.test(c) ? "session" : "item"}${v.n === 1 ? "" : "s"} · ${total ? Math.round(v.amt / total * 100) : 0}% of spending</div>
+      <div class="track"><div class="fill ${i % 2 ? "o" : ""}" style="width:${total ? v.amt / total * 100 : 0}%"></div></div>
+    </div>`).join("");
+  if (expCat && !cats[expCat]) expCat = "";
+  $("expChips").innerHTML = [`<button class="chip" data-c="" aria-pressed="${!expCat}">All</button>`, ...Object.keys(cats).sort().map(c => `<button class="chip" data-c="${esc(c)}" aria-pressed="${c === expCat}">${esc(c)}</button>`)].join("");
+  const list = all.filter(e => !expCat || e.cat === expCat).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  $("expBody").innerHTML = list.length ? list.map(e => `<tr><td>${dLabel(e.date)}</td><td>${esc(e.desc)}</td><td><span class="cat ${esc(e.cat)}">${esc(e.cat)}</span></td><td class="r num">${fmt(e.amount)}</td></tr>`).join("")
+    : `<tr><td colspan="4" class="empty">No expenses yet.</td></tr>`;
+  $("expTotal").textContent = fmt(list.reduce((a, e) => a + e.amount, 0));
+  $("expAside").textContent = `LKR ${fmt(total)} in total`;
+}
+$("expChips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; expCat = b.dataset.c; renderExpenses(); });
+
+/* ===== Loading ===== */
+function readCache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY)); } catch { return null; } }
+function writeCache(data) { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ time: Date.now(), data })); } catch {} }
+async function load(force) {
+  const cached = readCache();
+  if (cached) render(cached.data);
+  if (!force && cached && Date.now() - cached.time < 60000) return;
+  try {
+    const data = await fetchAll();
+    writeCache(data); render(data);
+  } catch (e) {
+    $("error").textContent = (e.message || "Couldn't load the data.") + (cached ? " Showing the last saved figures; trying again shortly." : " Trying again shortly.");
+    $("error").hidden = false;
+  }
+}
+
+/* ===== Admin ===== */
+const IS_ADMIN = /[?&#]admin\b/.test(location.search + location.hash);
+const opts = (list, keep) => list.map(v => `<option value="${esc(v)}"${v === keep ? " selected" : ""}>${esc(v)}</option>`).join("");
+function fillAdmin() {
+  if (!IS_ADMIN || !state) return;
+  const names = [...new Map(state.members.map(m => [norm(m.name), m.name.trim()])).values()].sort((a, b) => a.localeCompare(b));
+  const ms = $("memberSelect"), keep = ms.value;
+  ms.innerHTML = `<option value="">Choose…</option>` + names.map(n => `<option value="${esc(n)}"${n === keep ? " selected" : ""}>${esc(titleCase(n))}</option>`).join("") +
+    `<option value="__new"${keep === "__new" ? " selected" : ""}>New member…</option>`;
+  const cats = [...new Set(["Booking", "Equipment", ...state.expenses.map(e => e.cat)])];
+  const kc = $("catSelect").value;
+  $("catSelect").innerHTML = opts(cats, kc || "Booking") + `<option value="__new"${kc === "__new" ? " selected" : ""}>Add new category…</option>`;
+  const mk = [...new Set(state.members.map(m => m.mkey))].sort().reverse();
+  const kf = $("fromMonthSelect").value;
+  $("fromMonthSelect").innerHTML = mk.map(k => `<option value="${k}"${k === kf ? " selected" : ""}>${mLong(k)}</option>`).join("");
+}
+
+async function adminPost(payload, pin) {
+  if (!ADMIN_URL || ADMIN_URL.startsWith("PASTE_")) throw new Error("The Apps Script web app URL hasn't been added to index.html yet.");
+  if (!pin) throw new Error("Enter the admin PIN first.");
+  const requestId = (crypto.randomUUID && crypto.randomUUID()) || (Date.now() + "-" + Math.random().toString(36).slice(2));
+  const body = JSON.stringify({ ...payload, pin, requestId });
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    let res = null;
+    try {
+      const r = await fetch(ADMIN_URL, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body });
+      const t = await r.text();
+      try { res = JSON.parse(t); } catch { res = null; }
+    } catch { res = null; }
+    if (res) { if (!res.ok) throw new Error(res.error || "The entry wasn't saved."); return res; }
+    if (attempt < 3) await new Promise(ok => setTimeout(ok, 1000 * attempt));
+  }
+  const e = new Error("Google didn't confirm the save. It may have gone through, so check before adding it again.");
+  e.uncertain = true; throw e;
+}
+let saveQueue = Promise.resolve(), pendingSaves = 0;
+function showSave(text, kind) { const b = $("saveStatus"); b.hidden = false; b.className = "save-status " + (kind || ""); b.textContent = text; }
+function queueSave(payload, summary) {
+  const pin = $("pin").value; pendingSaves++;
+  showSave(`Saving ${pendingSaves === 1 ? summary : pendingSaves + " entries"}…`, "busy");
+  saveQueue = saveQueue.then(async () => {
+    try { const res = await adminPost(payload, pin); pendingSaves--; showSave(pendingSaves ? `${res.message} ${pendingSaves} more saving…` : res.message, pendingSaves ? "busy" : "ok"); }
+    catch (err) { pendingSaves--; showSave(`Not saved: ${summary}. ${err.message}`, "bad"); }
+    if (!pendingSaves) setTimeout(() => load(true), 600);
+  });
+}
+function wireForm(id, build, describe, after) {
+  const form = $(id);
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    if (!$("pin").value) { showSave("Enter the admin PIN at the top first.", "bad"); $("pin").focus(); return; }
+    const p = build(Object.fromEntries(new FormData(form)));
+    queueSave(p, describe(p));
+    const keep = {}; ["date", "month"].forEach(n => { if (form.elements[n]) keep[n] = form.elements[n].value; });
+    form.reset();
+    Object.entries(keep).forEach(([n, v]) => form.elements[n].value = v);
+    if (after) after(form);
+  });
+}
+
+if (IS_ADMIN) {
+  $("adminTabBtn").hidden = false;
+  const local = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString();
+  document.querySelectorAll('form.admin input[type="date"]').forEach(i => i.value = local.slice(0, 10));
+  document.querySelectorAll('form.admin input[type="month"]').forEach(i => i.value = local.slice(0, 7));
+  const toggle = (sel, wrap, input) => $(sel).addEventListener("change", e => {
+    const on = e.target.value === "__new"; $(wrap).hidden = !on; $(input).required = on; if (on) $(input).focus();
+  });
+  toggle("memberSelect", "newMemberWrap", "newMember");
+  toggle("catSelect", "catNewWrap", "catNew");
+
+  $("pinForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const msg = $("pinMsg"); msg.className = "msg"; msg.textContent = "Checking…";
+    try { const r = await adminPost({ action: "check" }, $("pin").value); msg.className = "msg ok"; msg.textContent = r.message; }
+    catch (err) { msg.className = "msg bad"; msg.textContent = err.message; }
+  });
+
+  const lkr = a => "LKR " + fmt(num(a));
+  wireForm("payForm", f => ({
+    action: "payment", member: f.memberSelect === "__new" ? f.newMember.trim() : f.memberSelect,
+    month: f.month, amount: f.amount, date: f.date, agreed: f.agreed, notes: f.notes
+  }), p => `payment from ${titleCase(p.member)} for ${p.month ? mLabel(p.month) : "the month"}, ${lkr(p.amount)}`,
+  () => { $("newMemberWrap").hidden = true; $("newMember").required = false; });
+  wireForm("expForm", f => ({
+    action: "expense", date: f.date, description: f.description, amount: f.amount,
+    category: f.category === "__new" ? f.catNew.trim() : f.category
+  }), p => `expense "${p.description}", ${lkr(p.amount)}`,
+  form => { form.elements.description.value = "Futsal Booking"; $("catNewWrap").hidden = true; $("catNew").required = false; });
+  wireForm("monthForm", f => ({ action: "month", month: f.month, from: f.from }), p => `new month ${p.month ? mLabel(p.month) : ""}`);
+}
+
+/* ===== Tabs ===== */
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.setAttribute("aria-selected", x === t));
+  ["overview", "monthly", "members", "payments", "expenses", "admin"].forEach(n => $("tab-" + n).hidden = t.dataset.tab !== n);
+  if (t.dataset.tab !== "admin") { $("pin").value = ""; $("pinMsg").textContent = ""; }
+  if (t.dataset.tab === "overview") { const el = $("bars"); el.scrollLeft = el.scrollWidth; }
+}));
+
+$("year").textContent = new Date().getFullYear();
+load(false);
+setInterval(() => { if (!document.hidden) load(true); }, AUTO_REFRESH_SECONDS * 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(false); });
+</script>
+</body>
+</html>
