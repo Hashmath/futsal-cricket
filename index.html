@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Futsal & Cricket, Club Fund</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%BD%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%8F%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -127,8 +127,10 @@
 
   /* Monthly members list */
   .mlist { padding: 0 16px 14px; display: grid; gap: 8px; }
+  .divider { margin: 8px 0 2px; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
   .mrow { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: #FBFCFF; }
   .mrow .n { font-weight: 600; }
+  .mrow.occ { background: #F7F8FC; border-style: dashed; }
   .mrow .amt { font-size: 13px; color: var(--muted); }
   .mrow .amt b { color: var(--ink); }
   .mrow .track { grid-column: 1 / -1; height: 6px; margin-top: 2px; }
@@ -153,6 +155,34 @@
   tfoot td { font-weight: 700; background: #F6F8FD; }
   .cat { display: inline-block; padding: 2px 9px; border-radius: 6px; font-size: 12px; font-weight: 700; background: #E6F7F5; color: var(--teal-dark); }
   .cat.Equipment { background: #FFF0E5; color: #B4541A; }
+
+  /* Payment and expense feeds, grouped by month */
+  .feed { padding: 0 16px 6px; }
+  .group + .group { margin-top: 14px; }
+  .ghead { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 8px 2px; border-bottom: 2px solid var(--line); }
+  .ghead b { font-family: "Rajdhani", Arial, sans-serif; font-size: 19px; color: var(--navy-700); text-transform: uppercase; letter-spacing: .4px; }
+  .ghead { flex-wrap: wrap; }
+  .ghead span { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .ghead span strong { color: var(--ink); }
+  .item { display: grid; grid-template-columns: 46px 1fr auto; gap: 12px; align-items: center; padding: 10px 2px; border-bottom: 1px solid #EEF1F8; }
+  .item:last-child { border-bottom: 0; }
+  .dtile { width: 46px; height: 50px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1;
+           background: linear-gradient(160deg, #E4FBF7, #D2F4EE); color: var(--teal-dark); }
+  .dtile .d { font-family: "Rajdhani", Arial, sans-serif; font-weight: 700; font-size: 22px; }
+  .dtile .m { font-size: 11px; font-weight: 700; text-transform: uppercase; margin-top: 2px; }
+  .dtile.out { background: linear-gradient(160deg, #FFF1E6, #FFE3D0); color: #B4541A; }
+  .dtile.eq { background: linear-gradient(160deg, #EEF0FF, #E1E5FF); color: #3D4BB8; }
+  .item .who { font-weight: 600; font-size: 15px; }
+  .item .sub { font-size: 13px; color: var(--muted); margin-top: 2px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .tagx { display: inline-block; padding: 1px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; background: #EEF1F8; color: var(--navy-700); }
+  .tagx.reg { background: #E6F7F5; color: var(--teal-dark); }
+  .pill { font-family: "Rajdhani", Arial, sans-serif; font-weight: 700; font-size: 19px; padding: 3px 12px; border-radius: 999px; white-space: nowrap; }
+  .pill.in { background: #E3F8F5; color: var(--teal-dark); }
+  .pill.out { background: #FFEDE1; color: #C2561A; }
+  .feed-total { display: flex; justify-content: space-between; align-items: center; margin: 4px 16px 16px; padding: 12px 16px; border-radius: 12px;
+                background: linear-gradient(90deg, var(--navy-800), var(--navy-700)); color: #fff; font-weight: 600; }
+  .feed-total b { font-family: "Rajdhani", Arial, sans-serif; font-size: 24px; color: var(--lime); }
+  .feed-total.out b { color: #FFB37A; }
 
   /* Admin */
   form.admin { padding: 0 16px 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
@@ -181,7 +211,7 @@
 
 <header class="court">
   <div class="head-inner">
-    <div class="badge-logo" aria-hidden="true">⚽</div>
+    <div class="badge-logo" aria-hidden="true">🏏</div>
     <div>
       <h1>Futsal <span class="amp">&amp;</span> Cricket</h1>
       <div class="tag" id="tagline">Club fund, <b>monthly contributions and bookings</b></div>
@@ -269,8 +299,12 @@
   <!-- MEMBERS -->
   <div id="tab-members" hidden>
     <section class="panel">
-      <div class="phead"><h2>Members</h2><span class="aside">Each square is a month: <b style="color:#17C3B2">paid</b>, <b style="color:#E5B100">part</b>, <b style="color:#E05555">unpaid</b>, <b style="color:#3A8BD6">extra</b></span></div>
+      <div class="phead"><h2>Regular members</h2><span class="aside">Each square is a month: <b style="color:#17C3B2">paid</b>, <b style="color:#E05555">unpaid</b>, <b style="color:#3A8BD6">paid extra</b></span></div>
       <div class="mgrid" id="memberGrid"></div>
+    </section>
+    <section class="panel">
+      <div class="phead"><h2>Occasional players</h2><span class="aside">Pay only for the months they join</span></div>
+      <div class="mgrid" id="occGrid"></div>
     </section>
   </div>
 
@@ -279,11 +313,8 @@
     <section class="panel">
       <div class="phead"><h2>Payments</h2><span class="aside" id="payAside"></span></div>
       <div class="chips row" id="payChips"></div>
-      <div class="scroll"><table>
-        <thead><tr><th>Paid on</th><th>Member</th><th>For</th><th class="r">Amount</th><th>Notes</th></tr></thead>
-        <tbody id="payBody"></tbody>
-        <tfoot><tr><td colspan="3">Total</td><td class="r num" id="payTotal">–</td><td></td></tr></tfoot>
-      </table></div>
+      <div class="feed" id="payBody"></div>
+      <div class="feed-total"><span>Total</span><b class="num" id="payTotal">–</b></div>
     </section>
   </div>
 
@@ -293,11 +324,8 @@
       <div class="phead"><h2>Expenses</h2><span class="aside" id="expAside"></span></div>
       <div class="meters" id="expCats"></div>
       <div class="chips" id="expChips"></div>
-      <div class="scroll"><table>
-        <thead><tr><th>Date</th><th>Description</th><th>Category</th><th class="r">Amount</th></tr></thead>
-        <tbody id="expBody"></tbody>
-        <tfoot><tr><td colspan="3">Total</td><td class="r num" id="expTotal">–</td></tr></tfoot>
-      </table></div>
+      <div class="feed" id="expBody"></div>
+      <div class="feed-total out"><span>Total</span><b class="num" id="expTotal">–</b></div>
     </section>
   </div>
 
@@ -321,7 +349,7 @@
         <label>Amount (LKR)<input type="number" name="amount" min="1" step="any" inputmode="decimal" required></label>
         <label>Paid on<input type="date" name="date" required></label>
         <label>Monthly amount agreed (LKR)<input type="number" name="agreed" min="0" step="any" inputmode="decimal" placeholder="Only if not set for this month"></label>
-        <label>Notes<input name="notes" placeholder="Left blank: Full or Partial Payment"></label>
+        <label>Notes<input name="notes" placeholder="Optional"></label>
         <div class="actions"><button class="btn" type="submit">Add payment</button></div>
       </form>
     </section>
@@ -342,7 +370,7 @@
       <div class="phead"><h2>Start a new month</h2></div>
       <form class="admin" id="monthForm">
         <label>Month<input type="month" name="month" required></label>
-        <label>Copy members and amounts from<select name="from" id="fromMonthSelect"></select></label>
+        <div class="hint" style="grid-column:1/-1;font-size:13px;color:var(--muted)">Adds the 8 regular members with their fixed amounts. Occasional players are added when they pay.</div>
         <div class="actions"><button class="btn" type="submit">Create month</button></div>
       </form>
     </section>
@@ -350,9 +378,9 @@
 </main>
 
 <footer class="court">
-  <div class="badge-logo" aria-hidden="true">⚽</div>
+  <div class="badge-logo" aria-hidden="true">🏏</div>
   <div class="l1">Futsal <span class="amp">&amp;</span> Cricket</div>
-  <div class="l2">See you on the court.</div>
+  <div class="l2">See you at the crease.</div>
   <div class="l3">© <span id="year">2026</span> Futsal &amp; Cricket club</div>
 </footer>
 
@@ -369,6 +397,12 @@ const SOURCES = {
   expenses: { tab: "Expenses" }
 };
 const AUTO_REFRESH_SECONDS = 60;
+
+// The regular members and their fixed monthly amount (LKR). Everyone else is an occasional player.
+const REGULARS = {
+  "Aun": 5000, "Hashmath": 5000, "Kaleel": 5000, "Misfath": 5000,
+  "Nufais": 5000, "Rikas": 5000, "Safras": 3000, "Sajith": 5000
+};
 /* ================================= */
 
 const CACHE_KEY = "futsal-cricket-cache-v1";
@@ -455,9 +489,10 @@ function statusOf(paid, agreed) {
   if (agreed <= 0) return paid > 0 ? "Credit" : "Pending";
   if (paid > agreed) return "Credit";
   if (paid >= agreed) return "Paid";
-  return paid > 0 ? "Partial" : "Pending";
+  return "Pending"; // anything short of the agreed amount counts as unpaid; the amount due is shown
 }
-const LABEL = { Paid: "Paid", Partial: "Partial", Pending: "Unpaid", Credit: "Paid extra" };
+const LABEL = { Paid: "Paid", Pending: "Unpaid", Credit: "Paid extra" };
+const isRegular = name => Object.keys(REGULARS).some(n => norm(n) === norm(name));
 const badge = s => `<span class="badge s-${s}">${LABEL[s]}</span>`;
 
 /* ===== Render ===== */
@@ -562,9 +597,11 @@ function renderMonthly() {
   $("monOut").textContent = fmt(s.spent);
   const net = s.collected - s.spent;
   $("monOutSub").textContent = `Net for the month: ${net >= 0 ? "+" : "−"}LKR ${fmt(Math.abs(net))}`;
-  const order = { Pending: 0, Partial: 1, Paid: 2, Credit: 3 };
-  $("monList").innerHTML = s.mm.length ? [...s.mm].sort((a, b) => order[a.status] - order[b.status] || a.name.localeCompare(b.name)).map(m => `
-    <div class="mrow">
+  const order = { Pending: 0, Paid: 1, Credit: 2 };
+  const sorted = [...s.mm].sort((a, b) => (isRegular(b.name) - isRegular(a.name)) || order[a.status] - order[b.status] || a.name.localeCompare(b.name));
+  let shownOcc = false;
+  $("monList").innerHTML = s.mm.length ? sorted.map(m => (!isRegular(m.name) && !shownOcc && (shownOcc = true) ? `<div class="divider">Occasional players</div>` : "") + `
+    <div class="mrow${isRegular(m.name) ? "" : " occ"}">
       <div><div class="n">${esc(titleCase(m.name))}</div><div class="amt">Paid <b class="num">${fmt(m.paid)}</b> of ${fmt(m.agreed)}${m.due ? ` · due <b class="num">${fmt(m.due)}</b>` : ""}</div></div>
       ${badge(m.status)}
       <div class="track"><div class="fill" style="width:${m.agreed ? Math.min(m.paid / m.agreed * 100, 100) : (m.paid ? 100 : 0)}%"></div></div>
@@ -580,7 +617,7 @@ function renderMembers() {
     return { ...x, agreed, paid, due: Math.max(agreed - paid, 0), credit: Math.max(paid - agreed, 0) };
   }).sort((a, b) => b.due - a.due || b.paid - a.paid);
   const last6 = state.months.slice(-12);
-  $("memberGrid").innerHTML = list.length ? list.map(x => {
+  const card = x => {
     const st = x.due ? `<span class="badge s-Pending">Owes ${fmt(x.due)}</span>` : (x.credit ? `<span class="badge s-Credit">Ahead ${fmt(x.credit)}</span>` : `<span class="badge s-Paid">Up to date</span>`);
     const dots = last6.map(k => {
       const r = x.rows.find(r => r.mkey === k);
@@ -588,10 +625,25 @@ function renderMembers() {
     }).join("");
     return `<div class="mcard">
       <div class="top"><span class="n">${esc(titleCase(x.name))}</span>${st}</div>
-      <div class="stats"><span>Paid <b class="num">${fmt(x.paid)}</b></span><span>${x.rows.length} month${x.rows.length === 1 ? "" : "s"}</span></div>
+      <div class="stats"><span>Paid <b class="num">${fmt(x.paid)}</b></span><span>${x.rows.length} month${x.rows.length === 1 ? "" : "s"}</span>${isRegular(x.name) ? `<span>LKR <b class="num">${fmt(REGULARS[Object.keys(REGULARS).find(n => norm(n) === norm(x.name))])}</b>/month</span>` : ""}</div>
       <div class="dots">${dots}</div>
     </div>`;
-  }).join("") : `<div class="empty">No members yet.</div>`;
+  };
+  // Regulars always appear (with their fixed amount), even before their first month on the sheet.
+  Object.keys(REGULARS).forEach(n => { if (!list.some(x => norm(x.name) === norm(n))) list.push({ name: n, rows: [], agreed: 0, paid: 0, due: 0, credit: 0 }); });
+  const regs = list.filter(x => isRegular(x.name)).sort((a, b) => a.name.localeCompare(b.name));
+  const occ = list.filter(x => !isRegular(x.name));
+  $("memberGrid").innerHTML = regs.length ? regs.map(card).join("") : `<div class="empty">No regular members yet.</div>`;
+  $("occGrid").innerHTML = occ.length ? occ.map(card).join("") : `<div class="empty">No occasional players yet.</div>`;
+}
+
+// Notes like "Full Payment" add nothing to the list, so only other notes are shown.
+const plainNote = n => /^(full|partial|parital|balance|no)\s*payment\s*$/i.test(String(n).trim()) || !String(n).trim();
+const tile = (iso, cls = "") => { if (!iso) return `<div class="dtile ${cls}"><span class="d">–</span></div>`; const [, m, d] = iso.split("-"); return `<div class="dtile ${cls}"><span class="d">${+d}</span><span class="m">${MONTHS[+m - 1]}</span></div>`; };
+function groupByMonth(list, keyOf) {
+  const g = new Map();
+  list.forEach(x => { const k = keyOf(x) || "?"; if (!g.has(k)) g.set(k, []); g.get(k).push(x); });
+  return [...g.entries()].sort((a, b) => b[0].localeCompare(a[0]));
 }
 
 function renderPayments() {
@@ -599,9 +651,20 @@ function renderPayments() {
   if (payMonth && !state.months.includes(payMonth)) payMonth = "";
   $("payChips").innerHTML = [`<button class="chip" data-m="" aria-pressed="${!payMonth}">All</button>`, ...keys.map(k => `<button class="chip" data-m="${k}" aria-pressed="${k === payMonth}">${mLabel(k)}</button>`)].join("");
   const list = state.payments.filter(p => !payMonth || p.mkey === payMonth).sort((a, b) => (b.actual || "").localeCompare(a.actual || ""));
-  $("payBody").innerHTML = list.length ? list.map(p => `<tr><td>${dLabel(p.actual)}</td><td>${esc(titleCase(p.name))}</td><td>${p.mkey ? mLabel(p.mkey) : ""}</td><td class="r num">${fmt(p.amount)}</td><td>${esc(p.notes)}</td></tr>`).join("")
-    : `<tr><td colspan="5" class="empty">No payments for this month.</td></tr>`;
-  $("payTotal").textContent = fmt(list.reduce((a, p) => a + p.amount, 0));
+  $("payBody").innerHTML = list.length ? groupByMonth(list, p => p.mkey).map(([k, items]) => `
+    <div class="group">
+      <div class="ghead"><b>${k === "?" ? "No month" : mLong(k)}</b><span>${items.length} payment${items.length === 1 ? "" : "s"} · <strong class="num">LKR ${fmt(items.reduce((a, p) => a + p.amount, 0))}</strong></span></div>
+      ${items.map(p => {
+        const early = p.actual && p.mkey && p.actual.slice(0, 7) !== p.mkey;
+        return `<div class="item">
+          ${tile(p.actual)}
+          <div><div class="who">${esc(titleCase(p.name))}</div>
+            <div class="sub">${isRegular(p.name) ? `<span class="tagx reg">Regular</span>` : `<span class="tagx">Occasional</span>`}${early ? `<span>Paid ${p.actual < p.mkey ? "in advance" : "late"}</span>` : ""}${plainNote(p.notes) ? "" : `<span>${esc(p.notes)}</span>`}</div></div>
+          <span class="pill in num">+${fmt(p.amount)}</span>
+        </div>`;
+      }).join("")}
+    </div>`).join("") : `<div class="empty">No payments for this month.</div>`;
+  $("payTotal").textContent = "LKR " + fmt(list.reduce((a, p) => a + p.amount, 0));
   $("payAside").textContent = `${list.length} payment${list.length === 1 ? "" : "s"}`;
 }
 $("payChips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; payMonth = b.dataset.m; renderPayments(); });
@@ -619,9 +682,18 @@ function renderExpenses() {
   if (expCat && !cats[expCat]) expCat = "";
   $("expChips").innerHTML = [`<button class="chip" data-c="" aria-pressed="${!expCat}">All</button>`, ...Object.keys(cats).sort().map(c => `<button class="chip" data-c="${esc(c)}" aria-pressed="${c === expCat}">${esc(c)}</button>`)].join("");
   const list = all.filter(e => !expCat || e.cat === expCat).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-  $("expBody").innerHTML = list.length ? list.map(e => `<tr><td>${dLabel(e.date)}</td><td>${esc(e.desc)}</td><td><span class="cat ${esc(e.cat)}">${esc(e.cat)}</span></td><td class="r num">${fmt(e.amount)}</td></tr>`).join("")
-    : `<tr><td colspan="4" class="empty">No expenses yet.</td></tr>`;
-  $("expTotal").textContent = fmt(list.reduce((a, e) => a + e.amount, 0));
+  $("expBody").innerHTML = list.length ? groupByMonth(list, e => e.mkey).map(([k, items]) => {
+    const sess = items.filter(e => /book/i.test(e.cat)).length;
+    return `<div class="group">
+      <div class="ghead"><b>${k === "?" ? "No date" : mLong(k)}</b><span>${sess ? `${sess} session${sess === 1 ? "" : "s"} · ` : ""}<strong class="num">LKR ${fmt(items.reduce((a, e) => a + e.amount, 0))}</strong></span></div>
+      ${items.map(e => `<div class="item">
+          ${tile(e.date, /book/i.test(e.cat) ? "out" : "eq")}
+          <div><div class="who">${esc(e.desc)}</div><div class="sub"><span class="cat ${esc(e.cat)}">${esc(e.cat)}</span></div></div>
+          <span class="pill out num">−${fmt(e.amount)}</span>
+        </div>`).join("")}
+    </div>`;
+  }).join("") : `<div class="empty">No expenses yet.</div>`;
+  $("expTotal").textContent = "LKR " + fmt(list.reduce((a, e) => a + e.amount, 0));
   $("expAside").textContent = `LKR ${fmt(total)} in total`;
 }
 $("expChips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; expCat = b.dataset.c; renderExpenses(); });
@@ -654,9 +726,7 @@ function fillAdmin() {
   const cats = [...new Set(["Booking", "Equipment", ...state.expenses.map(e => e.cat)])];
   const kc = $("catSelect").value;
   $("catSelect").innerHTML = opts(cats, kc || "Booking") + `<option value="__new"${kc === "__new" ? " selected" : ""}>Add new category…</option>`;
-  const mk = [...new Set(state.members.map(m => m.mkey))].sort().reverse();
-  const kf = $("fromMonthSelect").value;
-  $("fromMonthSelect").innerHTML = mk.map(k => `<option value="${k}"${k === kf ? " selected" : ""}>${mLong(k)}</option>`).join("");
+
 }
 
 async function adminPost(payload, pin) {
@@ -723,7 +793,9 @@ if (IS_ADMIN) {
   const lkr = a => "LKR " + fmt(num(a));
   wireForm("payForm", f => ({
     action: "payment", member: f.memberSelect === "__new" ? f.newMember.trim() : f.memberSelect,
-    month: f.month, amount: f.amount, date: f.date, agreed: f.agreed, notes: f.notes
+    month: f.month, amount: f.amount, date: f.date, notes: f.notes,
+    // Regulars use their fixed amount if the month isn't set up yet; occasional players use what's typed.
+    agreed: f.agreed || (REGULARS[Object.keys(REGULARS).find(n => norm(n) === norm(f.memberSelect))] ?? "")
   }), p => `payment from ${titleCase(p.member)} for ${p.month ? mLabel(p.month) : "the month"}, ${lkr(p.amount)}`,
   () => { $("newMemberWrap").hidden = true; $("newMember").required = false; });
   wireForm("expForm", f => ({
@@ -731,7 +803,7 @@ if (IS_ADMIN) {
     category: f.category === "__new" ? f.catNew.trim() : f.category
   }), p => `expense "${p.description}", ${lkr(p.amount)}`,
   form => { form.elements.description.value = "Futsal Booking"; $("catNewWrap").hidden = true; $("catNew").required = false; });
-  wireForm("monthForm", f => ({ action: "month", month: f.month, from: f.from }), p => `new month ${p.month ? mLabel(p.month) : ""}`);
+  wireForm("monthForm", f => ({ action: "month", month: f.month, regulars: REGULARS }), p => `new month ${p.month ? mLabel(p.month) : ""}`);
 }
 
 /* ===== Tabs ===== */
