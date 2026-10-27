@@ -184,6 +184,24 @@
   .feed-total b { font-family: "Rajdhani", Arial, sans-serif; font-size: 24px; color: var(--lime); }
   .feed-total.out b { color: #FFB37A; }
 
+  /* Booking offer card: 8 stamps, the 8th is free */
+  .loyal { margin: 0 16px 16px; padding: 14px; border-radius: 16px; color: #fff;
+           background: linear-gradient(135deg, var(--navy-700), var(--navy-900)); position: relative; overflow: hidden; }
+  .loyal::after { content: ""; position: absolute; right: -30px; bottom: -30px; width: 120px; height: 120px; border-radius: 50%; border: 14px solid rgba(198,244,50,.12); }
+  .stamps { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; position: relative; z-index: 1; }
+  .stamp { aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font: 700 14px "Rajdhani", Arial, sans-serif;
+           border: 2px dashed rgba(255,255,255,.35); color: rgba(255,255,255,.6); }
+  .stamp.on { border: 0; background: linear-gradient(135deg, var(--teal), var(--lime)); color: var(--navy-900); }
+  .stamp.free { border: 2px solid var(--lime); color: var(--lime); font-size: 10px; letter-spacing: 0; }
+  .stamp.free.on { background: var(--lime); color: var(--navy-900); }
+  .stamp.next { box-shadow: 0 0 0 3px rgba(198,244,50,.45); }
+  .loyal .msg1 { margin-top: 12px; font-weight: 700; font-size: 16px; position: relative; z-index: 1; }
+  .loyal .msg1 b { color: var(--lime); }
+  .loyal .msg2 { margin-top: 2px; font-size: 13px; color: #B9C4E4; position: relative; z-index: 1; }
+  .pill.free { background: var(--lime); color: var(--navy-900); }
+  .tagx.rd { background: #F7E3E6; color: #7A1424; }
+  .tagx.no { background: #EEF1F8; color: var(--navy-700); font-variant-numeric: tabular-nums; }
+
   /* Admin */
   form.admin { padding: 0 16px 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
   form.admin label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: var(--muted); }
@@ -270,6 +288,11 @@
     </section>
 
     <section class="panel">
+      <div class="phead"><h2>Booking offer</h2><span class="aside">Every 8th booking is free</span></div>
+      <div class="loyal" id="loyalOv"></div>
+    </section>
+
+    <section class="panel">
       <div class="phead"><h2>Month by month</h2><span class="aside">Net = collected minus spent</span></div>
       <div class="legend"><span><i style="background:linear-gradient(180deg,#C6F432,#17C3B2)"></i>Collected</span><span><i style="background:#FF8A3D"></i>Spent</span></div>
       <div class="bars" id="bars"></div>
@@ -322,6 +345,7 @@
   <div id="tab-expenses" hidden>
     <section class="panel">
       <div class="phead"><h2>Expenses</h2><span class="aside" id="expAside"></span></div>
+      <div class="loyal" id="loyalExp"></div>
       <div class="meters" id="expCats"></div>
       <div class="chips" id="expChips"></div>
       <div class="feed" id="expBody"></div>
@@ -348,7 +372,8 @@
         <label>For month<input type="month" name="month" required></label>
         <label>Amount (LKR)<input type="number" name="amount" min="1" step="any" inputmode="decimal" required></label>
         <label>Paid on<input type="date" name="date" required></label>
-        <label>Monthly amount agreed (LKR)<input type="number" name="agreed" min="0" step="any" inputmode="decimal" placeholder="Only if not set for this month"></label>
+        <label id="agreedWrap">Monthly amount agreed (LKR)<input type="number" name="agreed" min="0" step="any" inputmode="decimal" placeholder="Only if not set for this month"></label>
+        <div id="rdHint" hidden style="grid-column:1/-1;font-size:13px;font-weight:600;color:#7A1424;background:#F7E3E6;border-radius:10px;padding:10px 12px">This amount is added here and deducted from the Red Dragon team fund (Cricket_Tournament_Accounts).</div>
         <label>Notes<input name="notes" placeholder="Optional"></label>
         <div class="actions"><button class="btn" type="submit">Add payment</button></div>
       </form>
@@ -361,8 +386,10 @@
         <label>Description<input name="description" value="Futsal Booking" required></label>
         <label>Category<select name="category" id="catSelect"></select></label>
         <label id="catNewWrap" hidden>New category<input name="catNew" id="catNew"></label>
-        <label>Amount (LKR)<input type="number" name="amount" min="1" step="any" inputmode="decimal" required></label>
-        <div class="actions"><button class="btn" type="submit">Add expense</button></div>
+        <label id="bookNoWrap">Booking number (1–8)<input type="number" name="bookingNo" id="bookingNo" min="1" max="8" inputmode="numeric"></label>
+        <label id="freeWrap" style="flex-direction:row;align-items:center;gap:8px;align-self:end;padding-bottom:10px"><input type="checkbox" name="free" id="freeBox" style="width:20px;height:20px"> Free booking (8th, offer)</label>
+        <label id="expAmountWrap">Amount (LKR)<input type="number" name="amount" id="expAmount" min="1" step="any" inputmode="decimal" required></label>
+        <div class="actions"><button class="btn" type="submit">Add expense</button><span class="msg" id="bookHint"></span></div>
       </form>
     </section>
 
@@ -397,6 +424,11 @@ const SOURCES = {
   expenses: { tab: "Expenses" }
 };
 const AUTO_REFRESH_SECONDS = 60;
+
+// Futsal booking offer: bookings are numbered 1–8 and every 8th one is free.
+const BOOKING_CYCLE = 8;
+// Name used on the Payments tab for money transferred in from the Red Dragon team fund.
+const TRANSFER_NAME = "Red Dragon Fund";
 
 // The regular members and their fixed monthly amount (LKR). Everyone else is an occasional player.
 const REGULARS = {
@@ -480,8 +512,11 @@ function shape(data) {
   }).filter(r => r.name && r.amount > 0);
   const expenses = data.expenses.map(r => {
     const date = isoOf(pick(r, "date"));
-    return { date, mkey: monthKey(date), desc: String(pick(r, "description")).trim(), cat: String(pick(r, "category")).trim() || "Other", amount: num(pick(r, "amount")) };
-  }).filter(r => r.amount > 0);
+    const cat = String(pick(r, "category")).trim() || "Other", desc = String(pick(r, "description")).trim();
+    const bookingNo = num(pick(r, "futsalbooking", "bookingno"));
+    return { date, mkey: monthKey(date), desc, cat, amount: num(pick(r, "amount")), bookingNo,
+             free: /book/i.test(cat) && num(pick(r, "amount")) === 0 && (bookingNo === BOOKING_CYCLE || /free/i.test(desc)) };
+  }).filter(r => r.amount > 0 || r.free);
   return { members, payments, expenses };
 }
 
@@ -492,6 +527,7 @@ function statusOf(paid, agreed) {
   return "Pending"; // anything short of the agreed amount counts as unpaid; the amount due is shown
 }
 const LABEL = { Paid: "Paid", Pending: "Unpaid", Credit: "Paid extra" };
+const isTransfer = name => norm(name) === norm(TRANSFER_NAME);
 const isRegular = name => Object.keys(REGULARS).some(n => norm(n) === norm(name));
 const badge = s => `<span class="badge s-${s}">${LABEL[s]}</span>`;
 
@@ -526,7 +562,9 @@ function render(data) {
   const cash = totIn - totOut;
   $("hCash").innerHTML = `<small>LKR</small>${cash < 0 ? "−" : ""}${fmt(Math.abs(cash))}`;
   $("hCash").classList.toggle("neg", cash < 0);
-  $("hCashNote").textContent = cash < 0 ? "More spent than collected so far" : "Collected minus spent";
+  const transferred = payments.filter(p => isTransfer(p.name)).reduce((a, p) => a + p.amount, 0);
+  $("hCashNote").textContent = (cash < 0 ? "More spent than collected so far" : "Collected minus spent") +
+    (transferred ? `, including LKR ${fmt(transferred)} from the Red Dragon fund` : "");
   $("kIn").textContent = fmt(totIn);
   $("kOut").textContent = fmt(totOut);
   $("kDue").textContent = fmt(totDue);
@@ -659,7 +697,7 @@ function renderPayments() {
         return `<div class="item">
           ${tile(p.actual)}
           <div><div class="who">${esc(titleCase(p.name))}</div>
-            <div class="sub">${isRegular(p.name) ? `<span class="tagx reg">Regular</span>` : `<span class="tagx">Occasional</span>`}${early ? `<span>Paid ${p.actual < p.mkey ? "in advance" : "late"}</span>` : ""}${plainNote(p.notes) ? "" : `<span>${esc(p.notes)}</span>`}</div></div>
+            <div class="sub">${isTransfer(p.name) ? `<span class="tagx rd">Fund transfer</span>` : isRegular(p.name) ? `<span class="tagx reg">Regular</span>` : `<span class="tagx">Occasional</span>`}${early ? `<span>Paid ${p.actual < p.mkey ? "in advance" : "late"}</span>` : ""}${plainNote(p.notes) || isTransfer(p.name) ? "" : `<span>${esc(p.notes)}</span>`}</div></div>
           <span class="pill in num">+${fmt(p.amount)}</span>
         </div>`;
       }).join("")}
@@ -669,7 +707,34 @@ function renderPayments() {
 }
 $("payChips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; payMonth = b.dataset.m; renderPayments(); });
 
+// Where we are on the 1–8 booking card, from the last numbered booking on the sheet.
+function bookingCard() {
+  const books = state.expenses.filter(e => /book/i.test(e.cat));
+  const numbered = books.filter(e => e.bookingNo >= 1);
+  const last = numbered.length ? numbered[numbered.length - 1].bookingNo : 0;
+  const filled = last % BOOKING_CYCLE;                // 0 after a free (8th) booking: a fresh card
+  const next = filled + 1;
+  const freeCount = books.filter(e => e.free).length;
+  const lastPaid = [...books].reverse().find(e => e.amount > 0);
+  return { filled, next, freeCount, saved: freeCount * (lastPaid ? lastPaid.amount : 0), price: lastPaid ? lastPaid.amount : 0 };
+}
+function renderLoyalty() {
+  const c = bookingCard();
+  const stamps = Array.from({ length: BOOKING_CYCLE }, (_, i) => {
+    const n = i + 1, on = n <= c.filled, free = n === BOOKING_CYCLE;
+    return `<span class="stamp${on ? " on" : ""}${free ? " free" : ""}${n === c.next ? " next" : ""}">${free ? "FREE" : n}</span>`;
+  }).join("");
+  const left = BOOKING_CYCLE - c.next; // paid bookings still to go before the free one
+  const msg = c.next === BOOKING_CYCLE ? `The next booking is <b>FREE</b>`
+    : `<b>${left}</b> more paid booking${left === 1 ? "" : "s"}, then one <b>free</b>`;
+  const html = `<div class="stamps">${stamps}</div>
+    <div class="msg1">${msg}</div>
+    <div class="msg2">Next booking is number ${c.next} of ${BOOKING_CYCLE}${c.freeCount ? ` · ${c.freeCount} free booking${c.freeCount === 1 ? "" : "s"} so far, about LKR ${fmt(c.saved)} saved` : ""}</div>`;
+  $("loyalOv").innerHTML = html; $("loyalExp").innerHTML = html;
+}
+
 function renderExpenses() {
+  renderLoyalty();
   const all = state.expenses, total = all.reduce((a, e) => a + e.amount, 0);
   const cats = {};
   all.forEach(e => { (cats[e.cat] ||= { amt: 0, n: 0 }); cats[e.cat].amt += e.amount; cats[e.cat].n++; });
@@ -688,8 +753,8 @@ function renderExpenses() {
       <div class="ghead"><b>${k === "?" ? "No date" : mLong(k)}</b><span>${sess ? `${sess} session${sess === 1 ? "" : "s"} · ` : ""}<strong class="num">LKR ${fmt(items.reduce((a, e) => a + e.amount, 0))}</strong></span></div>
       ${items.map(e => `<div class="item">
           ${tile(e.date, /book/i.test(e.cat) ? "out" : "eq")}
-          <div><div class="who">${esc(e.desc)}</div><div class="sub"><span class="cat ${esc(e.cat)}">${esc(e.cat)}</span></div></div>
-          <span class="pill out num">−${fmt(e.amount)}</span>
+          <div><div class="who">${esc(e.desc)}</div><div class="sub"><span class="cat ${esc(e.cat)}">${esc(e.cat)}</span>${e.bookingNo ? `<span class="tagx no">#${e.bookingNo} of ${BOOKING_CYCLE}</span>` : ""}</div></div>
+          ${e.free ? `<span class="pill free">FREE</span>` : `<span class="pill out num">−${fmt(e.amount)}</span>`}
         </div>`).join("")}
     </div>`;
   }).join("") : `<div class="empty">No expenses yet.</div>`;
@@ -719,10 +784,12 @@ const IS_ADMIN = /[?&#]admin\b/.test(location.search + location.hash);
 const opts = (list, keep) => list.map(v => `<option value="${esc(v)}"${v === keep ? " selected" : ""}>${esc(v)}</option>`).join("");
 function fillAdmin() {
   if (!IS_ADMIN || !state) return;
+  if (!fillAdmin.done) { fillAdmin.done = true; setTimeout(() => prepareBooking(false)); }
   const names = [...new Map(state.members.map(m => [norm(m.name), m.name.trim()])).values()].sort((a, b) => a.localeCompare(b));
   const ms = $("memberSelect"), keep = ms.value;
   ms.innerHTML = `<option value="">Choose…</option>` + names.map(n => `<option value="${esc(n)}"${n === keep ? " selected" : ""}>${esc(titleCase(n))}</option>`).join("") +
-    `<option value="__new"${keep === "__new" ? " selected" : ""}>New member…</option>`;
+    `<option value="__new"${keep === "__new" ? " selected" : ""}>New member…</option>` +
+    `<option value="__rd"${keep === "__rd" ? " selected" : ""}>Transfer from Red Dragon team fund</option>`;
   const cats = [...new Set(["Booking", "Equipment", ...state.expenses.map(e => e.cat)])];
   const kc = $("catSelect").value;
   $("catSelect").innerHTML = opts(cats, kc || "Booking") + `<option value="__new"${kc === "__new" ? " selected" : ""}>Add new category…</option>`;
@@ -755,7 +822,7 @@ function queueSave(payload, summary) {
   saveQueue = saveQueue.then(async () => {
     try { const res = await adminPost(payload, pin); pendingSaves--; showSave(pendingSaves ? `${res.message} ${pendingSaves} more saving…` : res.message, pendingSaves ? "busy" : "ok"); }
     catch (err) { pendingSaves--; showSave(`Not saved: ${summary}. ${err.message}`, "bad"); }
-    if (!pendingSaves) setTimeout(() => load(true), 600);
+    if (!pendingSaves) setTimeout(() => load(true).then(() => { prepareBooking.lastNo = 0; prepareBooking(false); }), 600);
   });
 }
 function wireForm(id, build, describe, after) {
@@ -781,6 +848,10 @@ if (IS_ADMIN) {
     const on = e.target.value === "__new"; $(wrap).hidden = !on; $(input).required = on; if (on) $(input).focus();
   });
   toggle("memberSelect", "newMemberWrap", "newMember");
+  $("memberSelect").addEventListener("change", e => {
+    const rd = e.target.value === "__rd";
+    $("rdHint").hidden = !rd; $("agreedWrap").hidden = rd;
+  });
   toggle("catSelect", "catNewWrap", "catNew");
 
   $("pinForm").addEventListener("submit", async e => {
@@ -791,19 +862,49 @@ if (IS_ADMIN) {
   });
 
   const lkr = a => "LKR " + fmt(num(a));
-  wireForm("payForm", f => ({
+  wireForm("payForm", f => f.memberSelect === "__rd"
+    ? { action: "transfer", member: TRANSFER_NAME, month: f.month, amount: f.amount, date: f.date, notes: f.notes }
+    : ({
     action: "payment", member: f.memberSelect === "__new" ? f.newMember.trim() : f.memberSelect,
     month: f.month, amount: f.amount, date: f.date, notes: f.notes,
     // Regulars use their fixed amount if the month isn't set up yet; occasional players use what's typed.
     agreed: f.agreed || (REGULARS[Object.keys(REGULARS).find(n => norm(n) === norm(f.memberSelect))] ?? "")
-  }), p => `payment from ${titleCase(p.member)} for ${p.month ? mLabel(p.month) : "the month"}, ${lkr(p.amount)}`,
-  () => { $("newMemberWrap").hidden = true; $("newMember").required = false; });
-  wireForm("expForm", f => ({
-    action: "expense", date: f.date, description: f.description, amount: f.amount,
-    category: f.category === "__new" ? f.catNew.trim() : f.category
-  }), p => `expense "${p.description}", ${lkr(p.amount)}`,
-  form => { form.elements.description.value = "Futsal Booking"; $("catNewWrap").hidden = true; $("catNew").required = false; });
+  }), p => p.action === "transfer" ? `transfer of ${lkr(p.amount)} from the Red Dragon fund` : `payment from ${titleCase(p.member)} for ${p.month ? mLabel(p.month) : "the month"}, ${lkr(p.amount)}`,
+  () => { $("newMemberWrap").hidden = true; $("newMember").required = false; $("rdHint").hidden = true; $("agreedWrap").hidden = false; });
+  wireForm("expForm", f => {
+    const category = f.category === "__new" ? f.catNew.trim() : f.category;
+    const booking = /book/i.test(category);
+    if (booking) prepareBooking.lastNo = +f.bookingNo || bookingCard().next;
+    return { action: "expense", date: f.date, description: f.description, category,
+             amount: booking && f.free ? 0 : f.amount,
+             bookingNo: booking ? f.bookingNo : "", free: booking ? (f.free ? "true" : "false") : "false" };
+  }, p => `expense "${p.description}", ${p.free === "true" ? "free booking" : lkr(p.amount)}`,
+  form => { form.elements.description.value = "Futsal Booking"; $("catNewWrap").hidden = true; $("catNew").required = false; prepareBooking(true); });
+
+  $("catSelect").addEventListener("change", () => prepareBooking(false));
+  $("freeBox").addEventListener("change", () => syncFree());
   wireForm("monthForm", f => ({ action: "month", month: f.month, regulars: REGULARS }), p => `new month ${p.month ? mLabel(p.month) : ""}`);
+}
+
+// Fills in the next booking number and ticks "Free" for the 8th booking.
+function prepareBooking(afterSave) {
+  if (!IS_ADMIN || !state) return;
+  const booking = /book/i.test($("catSelect").value);
+  $("bookNoWrap").hidden = !booking; $("freeWrap").hidden = !booking;
+  if (!booking) { $("freeBox").checked = false; syncFree(); $("bookHint").textContent = ""; return; }
+  // Right after a save the sheet hasn't been re-read yet, so count one on from the number just used.
+  const c = bookingCard();
+  let next = c.next;
+  if (afterSave && prepareBooking.lastNo) next = prepareBooking.lastNo % BOOKING_CYCLE + 1;
+  $("bookingNo").value = next;
+  $("freeBox").checked = next === BOOKING_CYCLE;
+  syncFree();
+}
+function syncFree() {
+  const free = $("freeBox").checked;
+  $("expAmountWrap").hidden = free; $("expAmount").required = !free;
+  $("bookHint").className = "msg ok";
+  $("bookHint").textContent = free ? "This booking will be saved as free (LKR 0)." : (+$("bookingNo").value === BOOKING_CYCLE - 1 ? "After this one, the next booking is free." : "");
 }
 
 /* ===== Tabs ===== */
