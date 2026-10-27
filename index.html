@@ -198,6 +198,12 @@
   .loyal .msg1 { margin-top: 12px; font-weight: 700; font-size: 16px; position: relative; z-index: 1; }
   .loyal .msg1 b { color: var(--lime); }
   .loyal .msg2 { margin-top: 2px; font-size: 13px; color: #B9C4E4; position: relative; z-index: 1; }
+  .bookinfo { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px;
+              background: linear-gradient(135deg, var(--navy-700), var(--navy-900)); color: #fff; font-weight: 600; }
+  .bookinfo .no { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+                  font: 700 18px "Rajdhani", Arial, sans-serif; background: linear-gradient(135deg, var(--teal), var(--lime)); color: var(--navy-900); }
+  .bookinfo.free .no { background: var(--lime); font-size: 12px; }
+  .bookinfo small { display: block; font-weight: 400; color: #B9C4E4; font-size: 13px; }
   .pill.free { background: var(--lime); color: var(--navy-900); }
   .tagx.rd { background: #F7E3E6; color: #7A1424; }
   .tagx.no { background: #EEF1F8; color: var(--navy-700); font-variant-numeric: tabular-nums; }
@@ -386,10 +392,9 @@
         <label>Description<input name="description" value="Futsal Booking" required></label>
         <label>Category<select name="category" id="catSelect"></select></label>
         <label id="catNewWrap" hidden>New category<input name="catNew" id="catNew"></label>
-        <label id="bookNoWrap">Booking number (1–8)<input type="number" name="bookingNo" id="bookingNo" min="1" max="8" inputmode="numeric"></label>
-        <label id="freeWrap" style="flex-direction:row;align-items:center;gap:8px;align-self:end;padding-bottom:10px"><input type="checkbox" name="free" id="freeBox" style="width:20px;height:20px"> Free booking (8th, offer)</label>
+        <div id="bookInfo" class="bookinfo" hidden></div>
         <label id="expAmountWrap">Amount (LKR)<input type="number" name="amount" id="expAmount" min="1" step="any" inputmode="decimal" required></label>
-        <div class="actions"><button class="btn" type="submit">Add expense</button><span class="msg" id="bookHint"></span></div>
+        <div class="actions"><button class="btn" type="submit">Add expense</button></div>
       </form>
     </section>
 
@@ -874,37 +879,35 @@ if (IS_ADMIN) {
   wireForm("expForm", f => {
     const category = f.category === "__new" ? f.catNew.trim() : f.category;
     const booking = /book/i.test(category);
-    if (booking) prepareBooking.lastNo = +f.bookingNo || bookingCard().next;
-    return { action: "expense", date: f.date, description: f.description, category,
-             amount: booking && f.free ? 0 : f.amount,
-             bookingNo: booking ? f.bookingNo : "", free: booking ? (f.free ? "true" : "false") : "false" };
-  }, p => `expense "${p.description}", ${p.free === "true" ? "free booking" : lkr(p.amount)}`,
+    const no = booking ? prepareBooking.no : 0;
+    if (booking) prepareBooking.lastNo = no;
+    // The script numbers the booking itself; this only skips the amount for the free (8th) one.
+    return { action: "expense", date: f.date, description: f.description, category, amount: no === BOOKING_CYCLE ? 0 : f.amount };
+  }, p => `expense "${p.description}", ${/book/i.test(p.category) && prepareBooking.lastNo === BOOKING_CYCLE ? "free booking" : lkr(p.amount)}`,
   form => { form.elements.description.value = "Futsal Booking"; $("catNewWrap").hidden = true; $("catNew").required = false; prepareBooking(true); });
 
   $("catSelect").addEventListener("change", () => prepareBooking(false));
-  $("freeBox").addEventListener("change", () => syncFree());
+
   wireForm("monthForm", f => ({ action: "month", month: f.month, regulars: REGULARS }), p => `new month ${p.month ? mLabel(p.month) : ""}`);
 }
 
-// Fills in the next booking number and ticks "Free" for the 8th booking.
+// Shows which booking number this will be; the 8th is free, so its amount box is hidden.
 function prepareBooking(afterSave) {
   if (!IS_ADMIN || !state) return;
   const booking = /book/i.test($("catSelect").value);
-  $("bookNoWrap").hidden = !booking; $("freeWrap").hidden = !booking;
-  if (!booking) { $("freeBox").checked = false; syncFree(); $("bookHint").textContent = ""; return; }
-  // Right after a save the sheet hasn't been re-read yet, so count one on from the number just used.
-  const c = bookingCard();
-  let next = c.next;
+  let next = bookingCard().next;
+  // Right after a save the sheet hasn't been re-read yet, so count on from the number just used.
   if (afterSave && prepareBooking.lastNo) next = prepareBooking.lastNo % BOOKING_CYCLE + 1;
-  $("bookingNo").value = next;
-  $("freeBox").checked = next === BOOKING_CYCLE;
-  syncFree();
-}
-function syncFree() {
-  const free = $("freeBox").checked;
-  $("expAmountWrap").hidden = free; $("expAmount").required = !free;
-  $("bookHint").className = "msg ok";
-  $("bookHint").textContent = free ? "This booking will be saved as free (LKR 0)." : (+$("bookingNo").value === BOOKING_CYCLE - 1 ? "After this one, the next booking is free." : "");
+  prepareBooking.no = booking ? next : 0;
+  const free = booking && next === BOOKING_CYCLE;
+  const info = $("bookInfo");
+  info.hidden = !booking;
+  info.className = "bookinfo" + (free ? " free" : "");
+  info.innerHTML = `<span class="no">${free ? "FREE" : next}</span><span>${free
+    ? `Booking ${next} of ${BOOKING_CYCLE} is free with the offer<small>No amount needed; it's saved as LKR 0.</small>`
+    : `This will be booking ${next} of ${BOOKING_CYCLE}<small>${next === BOOKING_CYCLE - 1 ? "The one after this is free." : `${BOOKING_CYCLE - 1 - next} more paid after this, then a free one.`}</small>`}</span>`;
+  $("expAmountWrap").hidden = free;
+  $("expAmount").required = !free;
 }
 
 /* ===== Tabs ===== */
